@@ -53,7 +53,7 @@ int draw_wireframe(char *path, TGAImage *framebuffer, TGAColor line_color, TGACo
     FILE *fp = fopen(path, "r");
     if (fp == NULL) {
         fprintf(stderr, "couldn't open file\n");
-        return FAIL;
+        return 1;
     }
 
     char line[LINE_SIZE];
