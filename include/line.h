@@ -1,6 +1,6 @@
 #pragma once
 
-#include <math.h>
+#include <stdlib.h>
 
 #include "tgaimage.h"
 #include "vec3.h"
