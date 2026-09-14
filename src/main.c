@@ -4,8 +4,8 @@
 #include "tgaimage.h"
 #include "wireframe.h"
 
-#define OBJ_PATH "../obj/diablo3_pose.obj"  // TODO: argv
-#define IMG_PATH "framebuffer.tga"          // TODO: argv
+#define OBJ_PATH "../assets/models/diablo3_pose.obj"    // TODO: argv
+#define IMG_PATH "framebuffer.tga"                      // TODO: argv
 
 int main(void)
 {

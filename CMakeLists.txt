@@ -17,10 +17,11 @@ add_compile_options(-Wall -Wextra)
 
 add_executable(tinyrenderer
     src/main.c
-    lib/tgaimage.c
-    lib/model.c
-    lib/wireframe.c
+    src/tgaimage.c
+    src/model.c
+    src/wireframe.c
+    src/line.c
 )
 
-target_include_directories(tinyrenderer PRIVATE src lib include)
+target_include_directories(tinyrenderer PRIVATE include)
 target_link_libraries(tinyrenderer PRIVATE m)
