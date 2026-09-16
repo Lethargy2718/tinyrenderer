@@ -14,10 +14,7 @@ static int get_model_data_count(Model *model, const char *path) {
         return 1;
     }
 
-    char line[128];
-
-    model->nverts = 0;
-    model->nfaces = 0;
+    char line[LINE_SIZE];
 
     while (fgets(line, sizeof(line), fp) != NULL) {
         char first_token[16];
@@ -31,6 +28,17 @@ static int get_model_data_count(Model *model, const char *path) {
 }
 
 int model_load(Model *model, const char *path) {
+    if (!model || !path) {
+        fprintf(stderr, "NULL arguments in model_load\n");
+        return 1;
+    }
+
+    // default init
+    model->verts = NULL;
+    model->faces_vrt = NULL;
+    model->nverts = 0;
+    model->nfaces = 0;
+
     if (get_model_data_count(model, path) == 1) {
         return 1;
     }
@@ -39,14 +47,14 @@ int model_load(Model *model, const char *path) {
     
     if (model->verts == NULL) {
         fprintf(stderr, "Failed to allocate vertex array\n");
-        return 1;
+        goto err;
     }
 
     model->faces_vrt = malloc(sizeof(int) * model->nfaces * 3);
 
     if (model->faces_vrt == NULL) {
         fprintf(stderr, "Failed to allocate face array\n");
-        return 1;
+        goto err;
     }
 
     int next_vertex_idx = 0;
@@ -55,8 +63,7 @@ int model_load(Model *model, const char *path) {
     FILE *fp = fopen(path, "r");
     if (fp == NULL) {
         fprintf(stderr, "Couldn't open .obj file\n");
-        model_free(model);
-        return 1;
+        goto err;
     }
 
     char line[LINE_SIZE];
@@ -80,10 +87,17 @@ int model_load(Model *model, const char *path) {
         }
     }
 
+    fclose(fp);
     return 0;
+
+err:
+    model_free(model);
+    return 1;
 }
 
 void model_free(Model *model) {
+    if (!model) return;
+
     free(model->verts);
     free(model->faces_vrt);
     model->verts = NULL;
