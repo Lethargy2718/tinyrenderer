@@ -18,7 +18,7 @@ static int get_model_data_count(Model *model, const char *path) {
 
     while (fgets(line, sizeof(line), fp) != NULL) {
         char first_token[16];
-        sscanf(line, "%s", first_token);
+        sscanf(line, "%15s", first_token);
         if (strcmp(first_token, "v") == 0) model->nverts++;
         else if (strcmp(first_token, "f") == 0) model->nfaces++;
     }
@@ -70,7 +70,7 @@ int model_load(Model *model, const char *path) {
 
     while (fgets(line, sizeof(line), fp) != NULL) {
         char first_token[16];
-        sscanf(line, "%s", first_token);
+        sscanf(line, "%15s", first_token);
 
         if (strcmp(first_token, "v") == 0) {
             float x, y, z;
