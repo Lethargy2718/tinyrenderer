@@ -1,3 +1,5 @@
+#include <math.h>
+
 #include "vec3.h"
 #include "tgaimage.h"
 #include "model.h"
@@ -5,7 +7,7 @@
 
 // converts a single object-space continuous coordinate in [-1, 1] to a discrete pixel coordinate in [0, size-1]
 static int remap_coord(float coord, int size) {
-    return (int)((coord + 1.0f) * size / 2.0f);
+    return (int)roundf((coord + 1.0f) * size / 2.0f);
 }
 
 // remaps vec3 coords to framebuffer space and collapses the z-coordinate to 0
