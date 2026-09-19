@@ -18,7 +18,7 @@ static Vec3 remap_vec(Vec3 v, TGAImage *framebuffer) {
     return v;
 }
 
-int draw_wireframe(Model *model, TGAImage *framebuffer, TGAColor line_color, TGAColor vertex_color) {
+void draw_wireframe(const Model *model, TGAImage *framebuffer, TGAColor line_color, TGAColor vertex_color) {
     for (int start = 0; start < model->nfaces * 3; start += 3) {
         Vec3 v0 = remap_vec(model->verts[model->faces_vrt[start]], framebuffer);
         Vec3 v1 = remap_vec(model->verts[model->faces_vrt[start + 1]], framebuffer);
@@ -32,11 +32,9 @@ int draw_wireframe(Model *model, TGAImage *framebuffer, TGAColor line_color, TGA
     
     // Draw vertices
     for (int i = 0; i < model->nverts; i++) {
-        int x = remap_coord(model->verts[i].x, framebuffer->w);
-        int y = remap_coord(model->verts[i].y, framebuffer->h);
-
-        tga_set(framebuffer, x, y, vertex_color);
+        Vec3 v = remap_vec(model->verts[i], framebuffer);
+        tga_set(framebuffer, (int)v.x, (int)v.y, vertex_color);
     }
 
-    return 0;
+    return;
 }
