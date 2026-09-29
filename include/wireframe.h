@@ -3,4 +3,4 @@
 #include "tgaimage.h"
 #include "model.h"
 
-int draw_wireframe(Model *model, TGAImage *framebuffer, TGAColor line_color, TGAColor vertex_color);
+int draw_wireframe(const Model *model, TGAImage *framebuffer, const TGAColor line_color, const TGAColor vertex_color);

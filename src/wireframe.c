@@ -4,6 +4,8 @@
 #include "tgaimage.h"
 #include "model.h"
 #include "line.h"
+#include "triangle.h"
+#include "color.h"
 
 // converts a single object-space continuous coordinate in [-1, 1] to a discrete pixel coordinate in [0, size-1]
 static int remap_coord(float coord, int size) {
@@ -18,18 +20,24 @@ static Vec3 remap_vec(Vec3 v, TGAImage *framebuffer) {
     return v;
 }
 
-void draw_wireframe(const Model *model, TGAImage *framebuffer, TGAColor line_color, TGAColor vertex_color) {
+void draw_wireframe(const Model *model, TGAImage *framebuffer, const TGAColor line_color, const TGAColor vertex_color) {
     for (int start = 0; start < model->nfaces * 3; start += 3) {
         Vec3 v0 = remap_vec(model->verts[model->faces_vrt[start]], framebuffer);
         Vec3 v1 = remap_vec(model->verts[model->faces_vrt[start + 1]], framebuffer);
         Vec3 v2 = remap_vec(model->verts[model->faces_vrt[start + 2]], framebuffer);
         
-        draw_line(v0, v1, framebuffer, line_color);
-        draw_line(v1, v2, framebuffer, line_color);
-        draw_line(v2, v0, framebuffer, line_color);
+        // TODO: move triangle logic somewhere
+        
+        // draw_line(v0, v1, framebuffer, line_color);
+        // draw_line(v1, v2, framebuffer, line_color);
+        // draw_line(v2, v0, framebuffer, line_color);
+
+        Triangle t = {v0, v1, v2};
+        draw_triangle_scanline(framebuffer, random_color(), t);
     }
     
-    
+    return;
+
     // Draw vertices
     for (int i = 0; i < model->nverts; i++) {
         Vec3 v = remap_vec(model->verts[i], framebuffer);

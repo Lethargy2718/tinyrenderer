@@ -21,6 +21,8 @@ add_executable(tinyrenderer
     src/model.c
     src/wireframe.c
     src/line.c
+    src/triangle.c
+    src/color.c
 )
 
 target_include_directories(tinyrenderer PRIVATE include)

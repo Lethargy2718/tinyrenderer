@@ -1,5 +1,6 @@
 #include <math.h>
 #include <stdlib.h>
+#include <time.h>
 
 #include "tgaimage.h"
 #include "wireframe.h"
@@ -9,6 +10,8 @@
 
 int main(void)
 {
+    srand((unsigned)time(NULL));
+
     const int width = 1200;
     const int height = 1200;
 

@@ -1,11 +1,10 @@
+#include <math.h>
+
+#include "triangle.h"
 #include "vec3.h"
+#include "tgaimage.h"
 
-typedef struct {
-    Vec3 v0;
-    Vec3 v1;
-    Vec3 v2;
-} Triangle;
-
+// swap two vectors
 static void swap_vec3(Vec3 *a, Vec3 *b)
 {
     Vec3 temp = *a;
@@ -13,7 +12,7 @@ static void swap_vec3(Vec3 *a, Vec3 *b)
     *b = temp;
 }
 
-// v0 < v1 < v2
+// v0 < v1 < v2 (y coordinate)
 static void sort_vertices(Triangle *t) {
     if (t->v0.y > t->v1.y) swap_vec3(&t->v0, &t->v1);
     if (t->v1.y > t->v2.y) swap_vec3(&t->v1, &t->v2);
@@ -22,36 +21,33 @@ static void sort_vertices(Triangle *t) {
     return;
 }
 
-// t must be sorted
-static void get_boundaries(const Triangle *t, Vec3 *left, Vec3 *right) {
-    // if equal, takes top vertex,
-    if (t->v1.x < t->v2.x) {
-        *left = t->v1;
-        *right = t->v2;
-    }
-    else if (t->v1.x < t->v2.x) {
-        *left = t->v2;
-        *right = t->v1;
-    }
-    else {
-        // v1.x == v2.x
-        if (t->v1.x < t->v0.x) {
-            *left = t->v1;
-            *right = t->v2;
-        }
-        else {
-            *left = t->v2;
-            *right = t->v1;
-        }
-    }
-
-    return;
+// x of the edge a->b at row y. If the edge is horizontal, return a.x.
+static float edge_x(Vec3 a, Vec3 b, int y) {
+    if (b.y == a.y) return a.x;
+    return a.x + (y - a.y) * (b.x - a.x) / (b.y - a.y);
 }
 
-// copies triangle to sort the copied version
-void draw_triangle(Triangle t) {
+void draw_triangle_scanline(TGAImage *img, TGAColor c, Triangle t) {
     sort_vertices(&t);
 
-    Vec3 left, right, center = t.v0;
-    get_boundaries(&t, &left, &right);
+    for (int y = (int)t.v0.y; y <= (int)t.v2.y; y++) {
+        // long edge (v0 -> v2)
+        float x1 = edge_x(t.v0, t.v2, y);
+
+        // short edges (v0 -> v1 then v1 -> v2)
+        float x2 = (y < (int)t.v1.y) ? edge_x(t.v0, t.v1, y) : edge_x(t.v1, t.v2, y);
+
+        float xl = fminf(x1, x2);
+        float xr = fmaxf(x1, x2);
+
+        for (int x = (int)roundf(xl); x <= (int)roundf(xr); x++) {
+            tga_set(img, x, y, c);
+        }
+    }
+}
+
+void draw_triangle_aabb(TGAImage *img, TGAColor c, Triangle t) {
+    // get bounding box
+    // for every pixel in box (in parallel):
+        // if inside triangle, color
 }
