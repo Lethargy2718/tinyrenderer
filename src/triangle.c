@@ -69,8 +69,8 @@ void draw_triangle_scanline(TGAImage *img, TGAColor c, Triangle t) {
 }
 
 void draw_triangle_aabb(TGAImage *img, TGAColor c, Triangle t) {
-    float d = (t.v1.x - t.v0.x) * (t.v2.y - t.v0.y) - (t.v1.y - t.v0.y) * (t.v2.x - t.v0.x);
-    if (d == 0.0f) return; // degenerate triangle
+    float d = (t.v1.x - t.v0.x) * (t.v2.y - t.v0.y) - (t.v1.y - t.v0.y) * (t.v2.x - t.v0.x); // 2 * area
+    if (d < 1.0f) return; // degenerate, back-facing, or sub-pixel triangle
     float inv = 1.0f / d;
     
     // 1. get bounding box
