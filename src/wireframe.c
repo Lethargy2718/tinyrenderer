@@ -33,7 +33,8 @@ void draw_wireframe(const Model *model, TGAImage *framebuffer, const TGAColor li
         // draw_line(v2, v0, framebuffer, line_color);
 
         Triangle t = {v0, v1, v2};
-        draw_triangle_scanline(framebuffer, random_color(), t);
+        // draw_triangle_scanline(framebuffer, random_color(), t);
+        draw_triangle_aabb(framebuffer, random_color(), t);
     }
     
     return;
