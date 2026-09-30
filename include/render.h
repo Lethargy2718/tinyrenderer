@@ -4,11 +4,6 @@
 #include "model.h"
 #include "triangle.h"
 
-typedef enum {
-    RASTER_SCANLINE,
-    RASTER_AABB,
-} RasterMode;
-
 typedef void (*TriangleRasterizer)(TGAImage *framebuffer, TGAColor color, Triangle t);
 
 void draw_wireframe(const Model *model, TGAImage *framebuffer, const TGAColor line_color);
