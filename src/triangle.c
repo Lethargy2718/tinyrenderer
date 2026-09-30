@@ -88,6 +88,7 @@ void draw_triangle_aabb(TGAImage *img, TGAColor c, Triangle t) {
         
     // 2. for each pixel in bbox, color if in triangle
 
+    #pragma omp parallel for if((maxY - minY) > 256)
     for (int y = minY; y <= maxY; y++) {
         for (int x = minX; x <= maxX; x++) {
             Bary w = barycentric(&t, inv, x + 0.5f, y + 0.5f);
