@@ -24,7 +24,7 @@ add_executable(tinyrenderer
     src/main.c
     src/tgaimage.c
     src/model.c
-    src/wireframe.c
+    src/render.c
     src/line.c
     src/triangle.c
     src/color.c

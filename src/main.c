@@ -3,7 +3,7 @@
 #include <time.h>
 
 #include "tgaimage.h"
-#include "wireframe.h"
+#include "render.h"
 
 #define OBJ_PATH "../assets/models/diablo3_pose.obj"    // TODO: argv
 #define IMG_PATH "framebuffer.tga"                      // TODO: argv
@@ -29,7 +29,7 @@ int main(void)
 
     Model model = {0};
     model_load(&model, OBJ_PATH);
-    draw_wireframe(&model, &framebuffer, red, yellow);
+    draw_filled(&model, &framebuffer, draw_triangle_aabb);
 
     tga_write_file(
         &framebuffer,
