@@ -4,6 +4,7 @@
 
 #include "tgaimage.h"
 #include "render.h"
+#include "triangle.h"
 
 #define OBJ_PATH "../assets/models/diablo3_pose.obj"    // TODO: argv
 #define IMG_PATH "framebuffer.tga"                      // TODO: argv
@@ -29,7 +30,17 @@ int main(void)
 
     Model model = {0};
     model_load(&model, OBJ_PATH);
-    draw_filled(&model, &framebuffer, draw_triangle_aabb);
+    // draw_gradient_background(&framebuffer, black, red);
+    draw_filled(&model, &framebuffer, draw_triangle_aabb, inside_default, 0.2f);
+    // draw_wireframe(&model, &framebuffer, red);
+
+    // Vec3 v0 = {100, 100, 0};
+    // Vec3 v1 = {200, 100, 0};
+    // Vec3 v2 = {100, 200, 0};
+
+    // Triangle t = {v0, v1, v2};
+    // draw_triangle_aabb(&framebuffer, red, t);
+
 
     tga_write_file(
         &framebuffer,

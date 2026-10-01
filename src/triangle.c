@@ -1,4 +1,5 @@
 #include <math.h>
+#include <stdio.h>
 
 #include "triangle.h"
 #include "vec3.h"
@@ -6,8 +7,6 @@
 
 #define MIN3(a, b, c) ((a) < (b) ? ((a) < (c) ? (a) : (c)) : ((b) < (c) ? (b) : (c)))
 #define MAX3(a, b, c) ((a) > (b) ? ((a) > (c) ? (a) : (c)) : ((b) > (c) ? (b) : (c)))
-
-typedef struct { float a, b, c; } Bary;
 
 // swap two vectors
 static void swap_vec3(Vec3 *a, Vec3 *b)
@@ -45,11 +44,19 @@ static Bary barycentric(const Triangle *t, float inv, float px, float py) {
     return w;
 }
 
-static int inside(const Bary *w) {
+int inside_default(const Bary *w, const float factor) {
     return w->a >= 0.0f && w->b >= 0.0f && w->c >= 0.0f;
 }
 
-void draw_triangle_scanline(TGAImage *img, TGAColor c, Triangle t) {
+int inside_hollow(const Bary *w, const float factor) {
+    return w->a >= 0.0f && w->b >= 0.0f && w->c >= 0.0f && !(w->a >= factor && w->b >= factor && w->c >= factor);
+}
+
+void draw_triangle_scanline(TGAImage *img, const TGAColor c, const Triangle t, const TriangleInside inside, const float inside_factor) {
+    float d = (t.v1.x - t.v0.x) * (t.v2.y - t.v0.y) - (t.v1.y - t.v0.y) * (t.v2.x - t.v0.x); // 2 * area
+    if (d < 1.0f) return; // degenerate, back-facing, or sub-pixel triangle
+    float inv = 1.0f / d;
+
     sort_vertices(&t);
 
     for (int y = (int)t.v0.y; y <= (int)t.v2.y; y++) {
@@ -63,12 +70,14 @@ void draw_triangle_scanline(TGAImage *img, TGAColor c, Triangle t) {
         float xr = fmaxf(x1, x2);
 
         for (int x = (int)roundf(xl); x <= (int)roundf(xr); x++) {
-            tga_set(img, x, y, c);
+            Bary w = barycentric(&t, inv, x + 0.5f, y + 0.5f);
+            TGAColor clr  = tga_color(255 * w.a, 255 * w.b, 255 * w.c, 255, TGA_RGB);
+            if (inside(&w, inside_factor)) tga_set(img, x, y, clr);
         }
     }
 }
 
-void draw_triangle_aabb(TGAImage *img, TGAColor c, Triangle t) {
+void draw_triangle_aabb(TGAImage *img, const TGAColor c, const Triangle t, const TriangleInside inside, const float inside_factor) {
     float d = (t.v1.x - t.v0.x) * (t.v2.y - t.v0.y) - (t.v1.y - t.v0.y) * (t.v2.x - t.v0.x); // 2 * area
     if (d < 1.0f) return; // degenerate, back-facing, or sub-pixel triangle
     float inv = 1.0f / d;
@@ -92,7 +101,8 @@ void draw_triangle_aabb(TGAImage *img, TGAColor c, Triangle t) {
     for (int y = minY; y <= maxY; y++) {
         for (int x = minX; x <= maxX; x++) {
             Bary w = barycentric(&t, inv, x + 0.5f, y + 0.5f);
-            if (inside(&w)) tga_set(img, x, y, c);
+            TGAColor clr  = tga_color(255 * w.a, 255 * w.b, 255 * w.c, 255, TGA_RGB);
+            if (inside(&w, inside_factor) == 1) tga_set(img, x, y, clr);
         }
     }
 }

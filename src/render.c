@@ -1,4 +1,5 @@
 #include <math.h>
+#include <stdio.h>
 
 #include "vec3.h"
 #include "tgaimage.h"
@@ -32,6 +33,10 @@ static Triangle get_face_screen_triangle(const Model *model, int face, const TGA
     return t;
 }
 
+static inline float distance(int x1, int y1, int x2, int y2) {
+    return sqrt((y2 - y1) * (y2 - y1) + (x2 - x1) * (x2 - x1));
+}
+
 void draw_wireframe(const Model *model, TGAImage *framebuffer, const TGAColor line_color) {
     for (int f = 0; f < model->nfaces; f++) {
         Triangle t = get_face_screen_triangle(model, f, framebuffer);
@@ -48,9 +53,33 @@ void draw_vertices(const Model *model, TGAImage *framebuffer, const TGAColor ver
     }
 }
 
-void draw_filled(const Model *model, TGAImage *framebuffer, const TriangleRasterizer raster) {
+void draw_filled(const Model *model, TGAImage *framebuffer, const TriangleRasterizer raster, const TriangleInside inside, const float inside_factor) {
     for (int f = 0; f < model->nfaces; f++) {
         Triangle t = get_face_screen_triangle(model, f, framebuffer);
-        raster(framebuffer, random_color(), t);
+        raster(framebuffer, random_color(), t, inside, inside_factor);
+    }
+}
+
+void draw_gradient_background(TGAImage *framebuffer, TGAColor color1, TGAColor color2) {
+    int cx = framebuffer->w / 2;
+    int cy = framebuffer->h / 2;
+
+    int mx = distance(0, 0, cx, cy);
+    
+    for (int x = 0; x <= framebuffer->w; x++) {
+        for (int y = 0; y <= framebuffer->h; y++) {            
+            float dist = distance(cx, cy, x, y);
+            float part = sqrt(dist / mx);
+
+            TGAColor final_color = tga_color(
+                color1.bgra[0] * part + color2.bgra[0] * (1 - part),
+                color1.bgra[1] * part + color2.bgra[1] * (1 - part),
+                color1.bgra[2] * part + color2.bgra[2] * (1 - part),
+                255,
+                TGA_RGB
+            );
+            
+            tga_set(framebuffer, x, y, final_color);
+        }
     }
 }
