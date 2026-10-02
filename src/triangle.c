@@ -52,57 +52,82 @@ int inside_hollow(const Bary *w, const float factor) {
     return w->a >= 0.0f && w->b >= 0.0f && w->c >= 0.0f && !(w->a >= factor && w->b >= factor && w->c >= factor);
 }
 
-void draw_triangle_scanline(TGAImage *img, const TGAColor c, const Triangle t, const TriangleInside inside, const float inside_factor) {
-    float d = (t.v1.x - t.v0.x) * (t.v2.y - t.v0.y) - (t.v1.y - t.v0.y) * (t.v2.x - t.v0.x); // 2 * area
+void draw_triangle_scanline(const TriangleRasterData *rd) {
+    TGAImage *img = rd->img;
+    ZBuffer *zb = rd->zbuffer;
+    TGAColor c = rd->c;
+    Triangle t = rd->t;
+
+    // cull before sorting since sorting can flip the face
+    float d = (t.v1.x - t.v0.x) * (t.v2.y - t.v0.y) - (t.v1.y - t.v0.y) * (t.v2.x - t.v0.x);
     if (d < 1.0f) return; // degenerate, back-facing, or sub-pixel triangle
-    float inv = 1.0f / d;
 
     sort_vertices(&t);
 
-    for (int y = (int)t.v0.y; y <= (int)t.v2.y; y++) {
-        // long edge (v0 -> v2)
-        float x1 = edge_x(t.v0, t.v2, y);
+    // recompute for the sorted triangle so the barycentrics match
+    d = (t.v1.x - t.v0.x) * (t.v2.y - t.v0.y) - (t.v1.y - t.v0.y) * (t.v2.x - t.v0.x);
+    if (fabsf(d) < 1.0f) return;
+    float inv = 1.0f / d;
 
-        // short edges (v0 -> v1 then v1 -> v2)
+    int yStart = (int)t.v0.y;
+    int yEnd   = (int)t.v2.y;
+    if (yStart < 0) yStart = 0;
+    if (yEnd > img->h - 1) yEnd = img->h - 1;
+
+    for (int y = yStart; y <= yEnd; y++) {
+        float x1 = edge_x(t.v0, t.v2, y);
         float x2 = (y < (int)t.v1.y) ? edge_x(t.v0, t.v1, y) : edge_x(t.v1, t.v2, y);
 
-        float xl = fminf(x1, x2);
-        float xr = fmaxf(x1, x2);
+        int xl = (int)roundf(fminf(x1, x2));
+        int xr = (int)roundf(fmaxf(x1, x2));
+        if (xl < 0) xl = 0;
+        if (xr > img->w - 1) xr = img->w - 1;
 
-        for (int x = (int)roundf(xl); x <= (int)roundf(xr); x++) {
+        for (int x = xl; x <= xr; x++) {
             Bary w = barycentric(&t, inv, x + 0.5f, y + 0.5f);
-            TGAColor clr  = tga_color(255 * w.a, 255 * w.b, 255 * w.c, 255, TGA_RGB);
-            if (inside(&w, inside_factor)) tga_set(img, x, y, clr);
+            float z = w.a * t.v0.z + w.b * t.v1.z + w.c * t.v2.z;
+            if (zbuffer_test(zb, x, y, z)) tga_set(img, x, y, c);
         }
     }
 }
 
-void draw_triangle_aabb(TGAImage *img, const TGAColor c, const Triangle t, const TriangleInside inside, const float inside_factor) {
-    float d = (t.v1.x - t.v0.x) * (t.v2.y - t.v0.y) - (t.v1.y - t.v0.y) * (t.v2.x - t.v0.x); // 2 * area
+void draw_triangle_aabb(const TriangleRasterData *rd) {
+    TGAImage *img = rd->img;
+    ZBuffer *zb = rd->zbuffer;
+    TriangleInside inside = rd->inside;
+    float inside_factor = rd->inside_factor;
+    Triangle t = rd->t;
+
+    float d = (t.v1.x - t.v0.x) * (t.v2.y - t.v0.y) - (t.v1.y - t.v0.y) * (t.v2.x - t.v0.x);
     if (d < 1.0f) return; // degenerate, back-facing, or sub-pixel triangle
     float inv = 1.0f / d;
+
+    // 1. bounding box, clamped to the framebuffer
     
-    // 1. get bounding box
-
     // NOTE: uses macros to potentially become branchless instructions
-    float minX_f = MIN3(t.v0.x, t.v1.x, t.v2.x);
-    float maxX_f = MAX3(t.v0.x, t.v1.x, t.v2.x);
-    float minY_f = MIN3(t.v0.y, t.v1.y, t.v2.y);
-    float maxY_f = MAX3(t.v0.y, t.v1.y, t.v2.y);
+    int minX = (int)floorf(MIN3(t.v0.x, t.v1.x, t.v2.x));
+    int maxX = (int)ceilf (MAX3(t.v0.x, t.v1.x, t.v2.x));
+    int minY = (int)floorf(MIN3(t.v0.y, t.v1.y, t.v2.y));
+    int maxY = (int)ceilf (MAX3(t.v0.y, t.v1.y, t.v2.y));
 
-    int minX = (int)floorf(minX_f);
-    int maxX = (int)ceilf(maxX_f);
-    int minY = (int)floorf(minY_f);
-    int maxY = (int)ceilf(maxY_f);
-        
-    // 2. for each pixel in bbox, color if in triangle
+    // TODO: add general clamp function somewhere
+    if (minX < 0) minX = 0;
+    if (minY < 0) minY = 0;
+    if (maxX > img->w - 1) maxX = img->w - 1;
+    if (maxY > img->h - 1) maxY = img->h - 1;
 
+    // 2. for each pixel in bbox, depth-test and color if inside
     #pragma omp parallel for if((maxY - minY) > 256)
     for (int y = minY; y <= maxY; y++) {
         for (int x = minX; x <= maxX; x++) {
             Bary w = barycentric(&t, inv, x + 0.5f, y + 0.5f);
-            TGAColor clr  = tga_color(255 * w.a, 255 * w.b, 255 * w.c, 255, TGA_RGB);
-            if (inside(&w, inside_factor) == 1) tga_set(img, x, y, clr);
+            if (inside(&w, inside_factor) != 1) continue;
+
+            float z = w.a * t.v0.z + w.b * t.v1.z + w.c * t.v2.z;
+            if (!zbuffer_test(zb, x, y, z)) continue;
+
+            TGAColor clr = tga_color(255 * w.a * w.a, 255 * w.b * w.b, 255 * w.c * w.c, 255, TGA_RGB);
+            tga_set(img, x, y, clr);
         }
     }
 }

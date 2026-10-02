@@ -8,17 +8,17 @@
 #include "triangle.h"
 #include "color.h"
 #include "render.h"
+#include "zbuffer.h"
 
 // converts a single object-space coordinate in [-1, 1] to a pixel coordinate in [0, size-1]
 static int remap_coord(float coord, int size) {
     return (int)roundf((coord + 1.0f) * size / 2.0f);
 }
 
-// remaps vec3 coords to framebuffer space and collapses z to 0
+// remaps vec3 coords to framebuffer space
 static Vec3 remap_vec(Vec3 v, const TGAImage *framebuffer) {
     v.x = remap_coord(v.x, framebuffer->w);
     v.y = remap_coord(v.y, framebuffer->h);
-    v.z = 0;
     return v;
 }
 
@@ -53,10 +53,17 @@ void draw_vertices(const Model *model, TGAImage *framebuffer, const TGAColor ver
     }
 }
 
-void draw_filled(const Model *model, TGAImage *framebuffer, const TriangleRasterizer raster, const TriangleInside inside, const float inside_factor) {
+void draw_filled(const Model *model, TGAImage *framebuffer, ZBuffer *zbuffer, TriangleRasterizer raster, TriangleInside inside, float inside_factor) {
     for (int f = 0; f < model->nfaces; f++) {
-        Triangle t = get_face_screen_triangle(model, f, framebuffer);
-        raster(framebuffer, random_color(), t, inside, inside_factor);
+        const TriangleRasterData data = {
+            .img           = framebuffer,
+            .zbuffer       = zbuffer,
+            .c             = random_color(),
+            .t             = get_face_screen_triangle(model, f, framebuffer),
+            .inside        = inside,
+            .inside_factor = inside_factor,
+        };
+        raster(&data);
     }
 }
 

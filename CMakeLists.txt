@@ -11,10 +11,9 @@ endif()
 
 find_package(OpenMP REQUIRED)
 
-add_compile_options(-Wall -Wextra)
+add_compile_options(-Wall -Wextra -Wno-unused-variable -Wno-unused-parameter)
 set(CMAKE_C_FLAGS_RELEASE "-O3 -march=native -DNDEBUG")
 
-# sanitizers only in Debug
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_compile_options(-g -fsanitize=address,undefined)
     add_link_options(-fsanitize=address,undefined)
@@ -28,7 +27,10 @@ add_executable(tinyrenderer
     src/line.c
     src/triangle.c
     src/color.c
+    src/zbuffer.c
 )
+
+set_source_files_properties(src/main.c PROPERTIES COMPILE_OPTIONS "-Wno-unused-variable")
 
 target_include_directories(tinyrenderer PRIVATE include)
 target_link_libraries(tinyrenderer PRIVATE m OpenMP::OpenMP_C)
