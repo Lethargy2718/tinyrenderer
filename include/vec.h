@@ -55,6 +55,18 @@ static inline Vec2 vec2_normalize(Vec2 a) {
     return vec2_scale(a, 1.0f / len);
 }
 
+// rotate counterclockwise around the origin (angle in radians)
+static inline Vec2 vec2_rotate(Vec2 a, float angle) {
+    float c = cosf(angle), s = sinf(angle);
+    return (Vec2){ a.x * c - a.y * s,
+                   a.x * s + a.y * c };
+}
+
+// rotate around an arbitrary pivot point
+static inline Vec2 vec2_rotate_around(Vec2 a, Vec2 pivot, float angle) {
+    return vec2_add(pivot, vec2_rotate(vec2_sub(a, pivot), angle));
+}
+
 // Vec3
 
 static inline Vec3 vec3_add(Vec3 a, Vec3 b) {
@@ -93,6 +105,38 @@ static inline Vec3 vec3_normalize(Vec3 a) {
     float len = vec3_length(a);
     if (len < 1e-8f) return (Vec3){ 0, 0, 0 };
     return vec3_scale(a, 1.0f / len);
+}
+
+// right-handed rotations, angle in radians
+static inline Vec3 vec3_rotate_x(Vec3 a, float angle) {
+    float c = cosf(angle), s = sinf(angle);
+    return (Vec3){ a.x,
+                   a.y * c - a.z * s,
+                   a.y * s + a.z * c };
+}
+
+static inline Vec3 vec3_rotate_y(Vec3 a, float angle) {
+    float c = cosf(angle), s = sinf(angle);
+    return (Vec3){  a.x * c + a.z * s,
+                    a.y,
+                   -a.x * s + a.z * c };
+}
+
+static inline Vec3 vec3_rotate_z(Vec3 a, float angle) {
+    float c = cosf(angle), s = sinf(angle);
+    return (Vec3){ a.x * c - a.y * s,
+                   a.x * s + a.y * c,
+                   a.z };
+}
+
+// rotate around an arbitrary axis (Rodrigues' formula); axis gets normalized
+static inline Vec3 vec3_rotate_axis(Vec3 a, Vec3 axis, float angle) {
+    Vec3 k = vec3_normalize(axis);
+    float c = cosf(angle), s = sinf(angle);
+    Vec3 term1 = vec3_scale(a, c);
+    Vec3 term2 = vec3_scale(vec3_cross(k, a), s);
+    Vec3 term3 = vec3_scale(k, vec3_dot(k, a) * (1.0f - c));
+    return vec3_add(vec3_add(term1, term2), term3);
 }
 
 // Vec4
@@ -149,4 +193,20 @@ static inline Vec4 vec3_to_vec4(Vec3 a, float w) {
 // perspective divide: (x/w, y/w, z/w)
 static inline Vec3 vec4_to_vec3_persp(Vec4 a) {
     return (Vec3){ a.x / a.w, a.y / a.w, a.z / a.w };
+}
+
+static inline Vec4 vec4_rotate_x(Vec4 a, float angle) {
+    return vec3_to_vec4(vec3_rotate_x(vec4_to_vec3(a), angle), a.w);
+}
+
+static inline Vec4 vec4_rotate_y(Vec4 a, float angle) {
+    return vec3_to_vec4(vec3_rotate_y(vec4_to_vec3(a), angle), a.w);
+}
+
+static inline Vec4 vec4_rotate_z(Vec4 a, float angle) {
+    return vec3_to_vec4(vec3_rotate_z(vec4_to_vec3(a), angle), a.w);
+}
+
+static inline Vec4 vec4_rotate_axis(Vec4 a, Vec3 axis, float angle) {
+    return vec3_to_vec4(vec3_rotate_axis(vec4_to_vec3(a), axis, angle), a.w);
 }

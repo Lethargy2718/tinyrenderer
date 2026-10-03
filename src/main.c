@@ -14,8 +14,8 @@ int main(void)
 {
     srand((unsigned)time(NULL));
 
-    const int width = 1200;
-    const int height = 1200;
+    const int width = 800;
+    const int height = 800;
 
     const TGAColor white  = tga_color(255, 255, 255, 255, TGA_RGB);
     const TGAColor green  = tga_color(  0, 255,   0, 255, TGA_RGB);
@@ -25,30 +25,30 @@ int main(void)
     const TGAColor black  = tga_color(  0,   0,   0, 255, TGA_RGB);
 
     TGAImage framebuffer;
-
     if (!tga_image_init(&framebuffer, width, height, TGA_RGB, black))
         return 1;
 
     ZBuffer zbuffer;
-
     if (!zbuffer_init(&zbuffer, width, height)) {
+        return 1;
+    }
+
+    TGAImage zimg;
+    const TGAColor zero = tga_color(0, 0, 0, 0, TGA_GRAYSCALE);
+    if (!tga_image_init(&zimg, width, height, TGA_GRAYSCALE, zero)) {
         return 1;
     }
 
     Model model = {0};
     model_load(&model, OBJ_PATH);
+    model_rotate_axis(&model, (Vec3){1,0,1}, 30.0f);
     draw_gradient_background(&framebuffer, black, red);
-    draw_filled(&model, &framebuffer, &zbuffer, draw_triangle_aabb, inside_hollow, 0.2f);
-    
+    draw_filled(&model, &framebuffer, &zbuffer, draw_triangle_aabb, inside_hollow, 0.05f);
+
     // draw_wireframe(&model, &framebuffer, red);
 
-    // Vec3 v0 = {100, 100, 0};
-    // Vec3 v1 = {200, 100, 0};
-    // Vec3 v2 = {100, 200, 0};
-
-    // Triangle t = {v0, v1, v2};
-    // draw_triangle_aabb(&framebuffer, red, t);
-
+    zbuffer_to_image(&zbuffer, &zimg);
+    tga_write_file(&zimg, "zbuffer.tga", true, false);
 
     tga_write_file(
         &framebuffer,
@@ -58,6 +58,7 @@ int main(void)
     );
 
     tga_image_free(&framebuffer);
+    tga_image_free(&zimg);
     zbuffer_free(&zbuffer);
     model_free(&model);
 
