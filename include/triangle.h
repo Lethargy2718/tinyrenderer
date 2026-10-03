@@ -1,7 +1,7 @@
 #pragma once
 
 #include "tgaimage.h"
-#include "vec3.h"
+#include "vec.h"
 #include "zbuffer.h"
 
 typedef struct {

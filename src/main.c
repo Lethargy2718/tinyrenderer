@@ -38,7 +38,7 @@ int main(void)
     Model model = {0};
     model_load(&model, OBJ_PATH);
     draw_gradient_background(&framebuffer, black, red);
-    draw_filled(&model, &framebuffer, &zbuffer, draw_triangle_aabb, inside_hollow, 0.06f);
+    draw_filled(&model, &framebuffer, &zbuffer, draw_triangle_aabb, inside_hollow, 0.2f);
     
     // draw_wireframe(&model, &framebuffer, red);
 

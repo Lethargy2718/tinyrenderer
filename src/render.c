@@ -1,7 +1,7 @@
 #include <math.h>
 #include <stdio.h>
 
-#include "vec3.h"
+#include "vec.h"
 #include "tgaimage.h"
 #include "model.h"
 #include "line.h"

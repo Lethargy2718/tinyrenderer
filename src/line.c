@@ -2,7 +2,7 @@
 
 #include <stdlib.h>
 
-#include "vec3.h"
+#include "vec.h"
 #include "tgaimage.h"
 
 void draw_line(Vec3 v1, Vec3 v2, TGAImage *framebuffer, TGAColor color)

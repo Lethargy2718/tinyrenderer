@@ -2,7 +2,7 @@
 #include <stdio.h>
 
 #include "triangle.h"
-#include "vec3.h"
+#include "vec.h"
 #include "tgaimage.h"
 
 #define MIN3(a, b, c) ((a) < (b) ? ((a) < (c) ? (a) : (c)) : ((b) < (c) ? (b) : (c)))
@@ -60,7 +60,7 @@ void draw_triangle_scanline(const TriangleRasterData *rd) {
 
     // cull before sorting since sorting can flip the face
     float d = (t.v1.x - t.v0.x) * (t.v2.y - t.v0.y) - (t.v1.y - t.v0.y) * (t.v2.x - t.v0.x);
-    if (d < 1.0f) return; // degenerate, back-facing, or sub-pixel triangle
+    if (d < 0.0f) return; // degenerate or sub-pixel triangle
 
     sort_vertices(&t);
 
@@ -99,7 +99,7 @@ void draw_triangle_aabb(const TriangleRasterData *rd) {
     Triangle t = rd->t;
 
     float d = (t.v1.x - t.v0.x) * (t.v2.y - t.v0.y) - (t.v1.y - t.v0.y) * (t.v2.x - t.v0.x);
-    if (d < 1.0f) return; // degenerate, back-facing, or sub-pixel triangle
+    if (d < 0.0f) return; // degenerate or sub-pixel triangle
     float inv = 1.0f / d;
 
     // 1. bounding box, clamped to the framebuffer
