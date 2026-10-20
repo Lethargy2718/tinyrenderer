@@ -1,6 +1,8 @@
 #pragma once
 #include <math.h>
 
+#define DEG2RAD(d) ((d) * 3.14159265358979323846f / 180.0f)
+
 typedef struct {
     float x;
     float y;

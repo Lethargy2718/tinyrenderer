@@ -6,9 +6,11 @@
 #include "zbuffer.h"
 #include "render.h"
 #include "triangle.h"
+#include "transform.h"
 
 #define OBJ_PATH "../assets/models/diablo3_pose.obj"    // TODO: argv
 #define IMG_PATH "framebuffer.tga"                      // TODO: argv
+#define ZBUF_PATH "zbuffer.tga"                         // TODO: argv
 
 int main(void)
 {
@@ -39,16 +41,19 @@ int main(void)
         return 1;
     }
 
+    const Vec3 eye    = { 2, -2, 5 };
+    const Vec3 center = { 0, 0, 0 };
+    const Vec3 up     = { 0, 1, 0 };
+    Camera cam = camera_make(eye, center, up, width, height);
+
     Model model = {0};
     model_load(&model, OBJ_PATH);
-    model_rotate_axis(&model, (Vec3){1,0,1}, 30.0f);
     draw_gradient_background(&framebuffer, black, red);
-    draw_filled(&model, &framebuffer, &zbuffer, draw_triangle_aabb, inside_hollow, 0.05f);
-
-    // draw_wireframe(&model, &framebuffer, red);
+    draw_filled(&model, &framebuffer, &zbuffer, &cam, inside_hollow, 0.1f);
+    // draw_wireframe(&model, &framebuffer, &cam, red);
 
     zbuffer_to_image(&zbuffer, &zimg);
-    tga_write_file(&zimg, "zbuffer.tga", true, false);
+    tga_write_file(&zimg, ZBUF_PATH, true, false);
 
     tga_write_file(
         &framebuffer,

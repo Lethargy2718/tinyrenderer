@@ -27,7 +27,6 @@ typedef struct {
     float inside_factor;
 } TriangleRasterData;
 
-void draw_triangle_scanline(const TriangleRasterData *raster_data);
 void draw_triangle_aabb(const TriangleRasterData *raster_data);
 
 int inside_default(const Bary *w, const float factor);

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "tgaimage.h"
+#include "stdbool.h"
 
 typedef struct {
     int w, h;
