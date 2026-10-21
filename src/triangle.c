@@ -59,6 +59,7 @@ void draw_triangle_aabb(const TriangleRasterData *rd) {
             if (!zbuffer_test(zb, x, y, z)) continue;
 
             TGAColor clr = tga_color(255 * w.a * w.a, 255 * w.b * w.b, 255 * w.c * w.c, 255, TGA_RGB);
+            // TGAColor clr = tga_color(0, 0, 255, 255, TGA_RGB);
             tga_set(img, x, y, clr);
         }
     }

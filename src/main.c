@@ -16,16 +16,22 @@ int main(void)
 {
     srand((unsigned)time(NULL));
 
+    // Screen size
     const int width = 800;
     const int height = 800;
 
+    // Colors
     const TGAColor white  = tga_color(255, 255, 255, 255, TGA_RGB);
     const TGAColor green  = tga_color(  0, 255,   0, 255, TGA_RGB);
-    const TGAColor red    = tga_color(  0,   0, 50, 255, TGA_RGB);
+    const TGAColor red    = tga_color(  0,   0, 100, 255, TGA_RGB);
     const TGAColor blue   = tga_color(255, 128,  64, 255, TGA_RGB);
     const TGAColor yellow = tga_color(  0, 200, 255, 255, TGA_RGB);
     const TGAColor black  = tga_color(  0,   0,   0, 255, TGA_RGB);
 
+    const TGAColor g1 = tga_color(25, 0, 0, 255, TGA_GRAYSCALE);
+    const TGAColor g2 = tga_color(0, 0, 0, 255, TGA_GRAYSCALE);
+
+    // Init buffers
     TGAImage framebuffer;
     if (!tga_image_init(&framebuffer, width, height, TGA_RGB, black))
         return 1;
@@ -41,19 +47,41 @@ int main(void)
         return 1;
     }
 
-    const Vec3 eye    = { 2, -2, 5 };
+    // Camera
+    const Vec3 eye    = { 0, 0, 5 };
     const Vec3 center = { 0, 0, 0 };
     const Vec3 up     = { 0, 1, 0 };
     Camera cam = camera_make(eye, center, up, width, height);
 
+    // Draw
     Model model = {0};
     model_load(&model, OBJ_PATH);
-    draw_gradient_background(&framebuffer, black, red);
-    draw_filled(&model, &framebuffer, &zbuffer, &cam, inside_hollow, 0.1f);
-    // draw_wireframe(&model, &framebuffer, &cam, red);
 
+    Transform a = transform_identity();
+    a.position = (Vec3){0.4, 0, 0};
+    a.rotation.y = DEG2RAD(180);
+    a.scale    = (Vec3){0.7, 0.7, 0.7};
+
+    Transform b = transform_identity();
+    b.position   = (Vec3){-0.4, 0, 0};
+    b.scale      = (Vec3){0.7, 0.7, 0.7};
+
+    draw_gradient_background(&framebuffer, black, red);
+    draw_gradient_background(&zimg, g1, g2);
+
+    draw_filled(&model, &framebuffer, &zbuffer, &cam, transform_matrix(&a), inside_default, 1.0f);
+    draw_filled(&model, &framebuffer, &zbuffer, &cam, transform_matrix(&b), inside_default, 1.0f);
+    // draw_wireframe(&model, &framebuffer, &cam, transform_matrix(&a), red);
+    
     zbuffer_to_image(&zbuffer, &zimg);
-    tga_write_file(&zimg, ZBUF_PATH, true, false);
+
+    // Write files
+    tga_write_file(
+        &zimg,
+        ZBUF_PATH,
+        true,
+        false
+    );
 
     tga_write_file(
         &framebuffer,
@@ -62,6 +90,7 @@ int main(void)
         false
     );
 
+    // Free memory
     tga_image_free(&framebuffer);
     tga_image_free(&zimg);
     zbuffer_free(&zbuffer);

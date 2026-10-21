@@ -30,7 +30,8 @@ void zbuffer_to_image(const ZBuffer *zb, TGAImage *out) {
     for (int y = 0; y < zb->h; y++) {
         for (int x = 0; x < zb->w; x++) {
             float z = zb->data[y * zb->w + x];
-            int g = (z == -INFINITY) ? 0 : (int)(255.0f * (z - zmin) / range);
+            if (z == -INFINITY) continue; // ignore background
+            int g = (int)(255.0f * (z - zmin) / range);
             tga_set(out, x, y, tga_color(g, 0, 0, 0, TGA_GRAYSCALE));
         }
     }

@@ -14,7 +14,6 @@ static inline Mat4 viewport(const int x, const int y, const int w, const int h) 
 // Applies perspective projection at the z-axis (meaning the camera eye
 // lies on the z-axis) with focal distance f
 static inline Mat4 perspective(const double f) {
-    // return mat4_identity();
     return (Mat4){{{1,0,0,0}, {0,1,0,0}, {0,0,1,0}, {0,0, -1/f,1}}};
 }
 
@@ -42,8 +41,81 @@ static inline Mat4 look_at(Vec3 eye, Vec3 center, Vec3 up) {
     return mat4_mul(rotation, translation);
 }
 
+static inline Mat4 translate(Vec3 t) {
+    return (Mat4){{
+        {1, 0, 0, t.x},
+        {0, 1, 0, t.y},
+        {0, 0, 1, t.z},
+        {0, 0, 0, 1}
+    }};
+}
+
+static inline Mat4 scale(Vec3 s) {
+    return (Mat4){{
+        {s.x, 0,   0,   0},
+        {0,   s.y, 0,   0},
+        {0,   0,   s.z, 0},
+        {0,   0,   0,   1}
+    }};
+}
+
+// NOTE: angle in rad
+static inline Mat4 rotate_x(double a) {
+    double c = cos(a), s = sin(a);
+    return (Mat4){{
+        {1, 0,  0, 0},
+        {0, c, -s, 0},
+        {0, s,  c, 0},
+        {0, 0,  0, 1}
+    }};
+}
+
+static inline Mat4 rotate_y(double a) {
+    double c = cos(a), s = sin(a);
+    return (Mat4){{
+        { c, 0, s, 0},
+        { 0, 1, 0, 0},
+        {-s, 0, c, 0},
+        { 0, 0, 0, 1}
+    }};
+}
+
+static inline Mat4 rotate_z(double a) {
+    double c = cos(a), s = sin(a);
+    return (Mat4){{
+        {c, -s, 0, 0},
+        {s,  c, 0, 0},
+        {0,  0, 1, 0},
+        {0,  0, 0, 1}
+    }};
+}
+
+/* Transform */
+
 typedef struct {
-    Mat4 proj_view;  // Perspective * ModelView (object space -> clip space)
+    Vec3 position;
+    Vec3 rotation;   // euler angles in radians (x, y, z)
+    Vec3 scale;
+} Transform;
+
+static inline Transform transform_identity(void) {
+    return (Transform){ {0, 0, 0}, {0, 0, 0}, {1, 1, 1} };
+}
+
+// Model matrix = Translate * Rotate * Scale
+// Applied right to left: scale, rotate, then translate
+static inline Mat4 transform_matrix(const Transform *t) {
+    Mat4 r = mat4_mul(rotate_y(t->rotation.y),
+             mat4_mul(rotate_x(t->rotation.x),
+                      rotate_z(t->rotation.z)));
+    return mat4_mul(translate(t->position),
+           mat4_mul(r, scale(t->scale)));
+}
+
+/* ---------- Camera ---------- */
+
+typedef struct {
+    Mat4 proj_view;  // Perspective * View (world space -> clip space)
     Mat4 viewport;   // NDC -> pixels
 } Camera;
 
