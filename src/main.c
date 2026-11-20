@@ -48,24 +48,26 @@ int main(void)
     }
 
     // Camera
-    const Vec3 eye    = { 0, 0, 5 };
+    const Vec3 eye    = { 0, 0, 1 };
     const Vec3 center = { 0, 0, 0 };
     const Vec3 up     = { 0, 1, 0 };
-    Camera cam = camera_make(eye, center, up, width, height);
+    const double focal = 1.0;
+    Camera cam = camera_make(eye, center, up, width, height, focal);
 
-    // Draw
+    // Model
     Model model = {0};
     model_load(&model, OBJ_PATH);
 
     Transform a = transform_identity();
-    a.position = (Vec3){0.4, 0, 0};
-    a.rotation.y = DEG2RAD(180);
+    a.position = (Vec3){-0.4, 0, 0};
     a.scale    = (Vec3){0.7, 0.7, 0.7};
 
     Transform b = transform_identity();
-    b.position   = (Vec3){-0.4, 0, 0};
+    b.position   = (Vec3){0.4, 0, 0};
+    b.rotation.y = DEG2RAD(180);
     b.scale      = (Vec3){0.7, 0.7, 0.7};
 
+    // Draw
     draw_gradient_background(&framebuffer, black, red);
     draw_gradient_background(&zimg, g1, g2);
 

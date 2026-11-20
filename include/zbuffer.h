@@ -11,6 +11,7 @@ typedef struct {
 bool zbuffer_init(ZBuffer *zb, int w, int h);
 void zbuffer_free(ZBuffer *zb);
 void zbuffer_to_image(const ZBuffer *zb, TGAImage *out);
+void zbuffer_clear(ZBuffer *zb);
 
 // returns true if the fragment is closer and updates the buffer
 static inline bool zbuffer_test(ZBuffer *zb, int x, int y, float z) {
@@ -18,4 +19,5 @@ static inline bool zbuffer_test(ZBuffer *zb, int x, int y, float z) {
     if (z > *d) { *d = z; return true; }
     return false;
 }
+
 

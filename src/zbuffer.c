@@ -36,3 +36,7 @@ void zbuffer_to_image(const ZBuffer *zb, TGAImage *out) {
         }
     }
 }
+
+void zbuffer_clear(ZBuffer *zb) {
+    for (int i = 0; i < zb->w * zb->h; i++) zb->data[i] = -INFINITY;
+}

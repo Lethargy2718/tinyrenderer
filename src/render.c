@@ -1,5 +1,4 @@
 #include <math.h>
-#include <stdio.h>
 
 #include "vec.h"
 #include "tgaimage.h"
@@ -11,27 +10,12 @@
 #include "zbuffer.h"
 #include "transform.h"
 
-// 4x4 matrix times (x, y, z, w) -> out[4]
-// TODO: move to mat.h maybe
-static void mat4_apply(const Mat4 *M, const double in[4], double out[4]) {
-    for (int r = 0; r < 4; r++) {
-        out[r] = 0;
-        for (int c = 0; c < 4; c++)
-            out[r] += M->m[r][c] * in[c];
-    }
-}
-
 // object space -> screen space (x,y in pixels, z = NDC depth)
 static Vec3 project(const Mat4 *mvp, const Camera *cam, Vec3 v) {
-    double in[4] = { v.x, v.y, v.z, 1.0 };
-    double clip[4], ndc[4], scr[4];
-
-    mat4_apply(mvp, in, clip);
-    for (int i = 0; i < 3; i++) ndc[i] = clip[i] / clip[3];
-    ndc[3] = 1.0;
-    mat4_apply(&cam->viewport, ndc, scr);
-
-    return (Vec3){ (float)scr[0], (float)scr[1], (float)scr[2] };
+    Vec4 clip = mat4_mul_vec4(*mvp, vec3_to_vec4(v, 1.0f));                // model + view + perspective
+    Vec3 ndc  = vec4_to_vec3_persp(clip);                                  // perspective divide
+    Vec4 scr  = mat4_mul_vec4(cam->viewport, vec3_to_vec4(ndc, 1.0f));     // viewport
+    return vec4_to_vec3(scr);
 }
 
 // fetches the i-th face's three vertices, already in framebuffer space
